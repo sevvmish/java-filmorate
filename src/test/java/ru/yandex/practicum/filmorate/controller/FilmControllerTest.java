@@ -1,33 +1,41 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.*;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import ru.yandex.practicum.filmorate.model.Film;
+
 import java.time.LocalDate;
 
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class FilmControllerTest {
-    private FilmController filmController;
+    @Autowired
+    private TestRestTemplate restTemplate;
+    private ResponseEntity<Film> response;
     private Film film1;
     private Film film2;
 
     @BeforeEach
     public void beforeEach() {
-        filmController = new FilmController();
-
         film1 = new Film();
         film1.setName("cats-killers");
         film1.setDescription("description of horror cats");
-        film1.setReleaseDate(LocalDate.of(1950, 11,11));
+        film1.setReleaseDate(LocalDate.of(1950, 11, 11));
         film1.setDuration(60);
 
         film2 = new Film();
         film2.setName("cats-savers");
         film2.setDescription("description of holy cats");
-        film2.setReleaseDate(LocalDate.of(2001, 11,11));
+        film2.setReleaseDate(LocalDate.of(2001, 11, 11));
         film2.setDuration(42);
     }
 
@@ -35,24 +43,28 @@ class FilmControllerTest {
     @DisplayName("Тест на добавление пустого запроса")
     void addEmptyFilmTest() {
         Film newFilm = new Film();
-        assertThrows(NullPointerException.class, ()->filmController.add(newFilm));
+        response = getPostResponse(newFilm);
+        assertEquals(response.getStatusCode(), HttpStatus.BAD_REQUEST);
     }
 
     @Test
     @DisplayName("Тест на добавление фильма и получения ИД")
     void addFilmTest() {
-        Film newFilm = filmController.add(film1);
-        assertEquals(1, newFilm.getId());
+        response = getPostResponse(film1);
+        assertEquals(response.getStatusCode(), HttpStatus.OK);
+        assertEquals(response.getBody().getId(), 1);
     }
 
     @Test
     @DisplayName("Тест на ошибку при добавлении фильма с нулевым или пустым именем")
     void nullOrEmptyNameErrorTest() {
         film1.setName(null);
-        assertThrows(NullPointerException.class, ()->filmController.add(film1));
+        response = getPostResponse(film1);
+        assertEquals(response.getStatusCode(), HttpStatus.BAD_REQUEST);
 
         film2.setName("");
-        assertThrows(ValidationException.class, ()->filmController.add(film2));
+        response = getPostResponse(film2);
+        assertEquals(response.getStatusCode(), HttpStatus.BAD_REQUEST);
     }
 
     @Test
@@ -60,37 +72,49 @@ class FilmControllerTest {
     void longDescriptionErrorTest() {
         String newDescription = film1.getDescription().repeat(200);
         film1.setDescription(newDescription);
-        assertThrows(ValidationException.class, ()->filmController.add(film1));
+        response = getPostResponse(film1);
+        assertEquals(response.getStatusCode(), HttpStatus.BAD_REQUEST);
     }
 
     @Test
     @DisplayName("Тест на ошибку в дате релиза")
     void releaseDateErrorTest() {
-        film1.setReleaseDate(LocalDate.of(1890,10,10));
-        assertThrows(ValidationException.class, ()->filmController.add(film1));
+        film1.setReleaseDate(LocalDate.of(1890, 10, 10));
+        response = getPostResponse(film1);
+        assertEquals(response.getStatusCode(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @Test
     @DisplayName("Тест на ошибку в указании длительности фильма")
     void durationErrorTest() {
         film1.setDuration(-1);
-        assertThrows(ValidationException.class, ()->filmController.add(film1));
+        response = getPostResponse(film1);
+        assertEquals(response.getStatusCode(), HttpStatus.BAD_REQUEST);
     }
 
     @Test
     @DisplayName("Тест на ошибку при обновлении фильма, которого не было ранее по его ИД")
     void updateWrongFilmErrorTest() {
-        filmController.add(film1);
-        assertThrows(ValidationException.class, ()->filmController.update(film2));
+        response = getPutResponse(film1);
+        assertEquals(response.getStatusCode(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @Test
     @DisplayName("Тест на ошибку валидации при обновлении фильма на новые данные")
     void updateFilmWithNewBadDataErrorTest() {
-        filmController.add(film1);
-        film2.setId(1);
+        response = getPostResponse(film1);
+        film2.setId(response.getBody().getId());
         film2.setDuration(-2);
-        assertThrows(ValidationException.class, ()->filmController.update(film2));
+        response = getPutResponse(film2);
+        assertEquals(response.getStatusCode(), HttpStatus.BAD_REQUEST);
     }
 
+    private ResponseEntity<Film> getPostResponse(Film film) {
+        return restTemplate.postForEntity("/films", film, Film.class);
+    }
+
+    private ResponseEntity<Film> getPutResponse(Film film) {
+        HttpEntity<Film> entity = new HttpEntity<>(film);
+        return restTemplate.exchange("/films", HttpMethod.PUT, entity, Film.class, film.getId());
+    }
 }

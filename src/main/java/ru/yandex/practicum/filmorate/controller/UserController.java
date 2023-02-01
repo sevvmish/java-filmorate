@@ -5,10 +5,8 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
-import java.time.LocalDate;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import javax.validation.Valid;
+import java.util.*;
 
 @Slf4j
 @RestController
@@ -18,12 +16,12 @@ public class UserController {
     private Map<Integer, User> users = new HashMap<>();
 
     @GetMapping
-    public Collection<User> getAll() {
-        return users.values();
+    public List<User> getAll() {
+        return new ArrayList<>(users.values());
     }
 
     @PostMapping
-    public User add(@RequestBody User user) {
+    public User add(@Valid @RequestBody User user) {
         if (!isValidationChecked(user)) {
             throw new ValidationException("data validation error");
         } else {
@@ -37,7 +35,7 @@ public class UserController {
     }
 
     @PutMapping
-    public User update(@RequestBody User user) {
+    public User update(@Valid @RequestBody User user) {
         if (!users.containsKey(user.getId())) {
             log.warn("wrong id: no such user to update");
             throw new ValidationException("wrong id: no such user to update");
@@ -60,16 +58,6 @@ public class UserController {
                     return false;
                 }
             }
-        }
-        if (user.getEmail().isEmpty() || user.getEmail().isBlank() || !user.getEmail().contains("@")) {
-            log.warn("error in email");
-            return false;
-        } else if (user.getLogin().isEmpty() || user.getLogin().isBlank()) {
-            log.warn("error in login");
-            return false;
-        } else if (user.getBirthday().isAfter(LocalDate.now())) {
-            log.warn("error in birthday");
-            return false;
         }
 
         if (user.getName() == null || user.getName().isEmpty() || user.getName().isBlank()) {
