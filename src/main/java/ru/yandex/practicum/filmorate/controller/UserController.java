@@ -31,25 +31,21 @@ public class UserController {
             throw new ValidationException("error in user id");
         }
         return userStorage.getById(id);
-        //return userService.getById(id);
     }
 
     @GetMapping
     public List<User> getAll() {
         return userStorage.getAll();
-        //return userService.getAll();
     }
 
     @PostMapping
     public User add(@Valid @RequestBody User user) {
         return userStorage.add(user);
-        //return userService.add(user);
     }
 
     @PutMapping
     public User update(@Valid @RequestBody User user) {
         return userStorage.update(user);
-        //return userService.update(user);
     }
 
     @PutMapping("{id}/friends/{friendId}")
@@ -60,6 +56,11 @@ public class UserController {
     @DeleteMapping("{id}/friends/{friendId}")
     public void removeFriend(@PathVariable Integer id, @PathVariable Integer friendId) {
         userService.removeFriend(id, friendId);
+    }
+
+    @GetMapping("{id}/friends/common/{otherId}")
+    public List<User> getCommon(@PathVariable Integer id, @PathVariable Integer otherId) {
+        return userService.getCommon(id, otherId);
     }
 
     @GetMapping("{id}/friends")

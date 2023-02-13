@@ -24,12 +24,12 @@ public class ExceptionHandler {
                 String.format("object not found: ", e.getMessage())
         );
     }
-/*
+
     @org.springframework.web.bind.annotation.ExceptionHandler
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorResponse runtimeException(final RuntimeException e) {
         return new ErrorResponse(
                 String.format("runtime exception: ", e.getMessage())
         );
-    }*/
+    }
 }

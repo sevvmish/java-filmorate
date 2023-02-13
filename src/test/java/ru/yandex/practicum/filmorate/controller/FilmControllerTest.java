@@ -8,7 +8,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -17,7 +16,6 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
-import java.util.List;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class FilmControllerTest {
@@ -67,7 +65,6 @@ class FilmControllerTest {
         response = restTemplate.getForEntity("/films/1", Film.class);
         assertEquals(response.getStatusCode(), HttpStatus.OK);
         assertEquals(response.getBody().getId(), 1);
-
     }
 
     @Test
@@ -132,7 +129,7 @@ class FilmControllerTest {
         int filmId = response.getBody().getId();
         //adding like to a film
         HttpEntity<Film> entity = new HttpEntity<>(film1);
-        response = restTemplate.exchange("/films/" +filmId + "/like/" + user1.getId(), HttpMethod.PUT, entity, Film.class);
+        response = restTemplate.exchange("/films/" + filmId + "/like/" + user1.getId(), HttpMethod.PUT, entity, Film.class);
         assertEquals(response.getStatusCode(), HttpStatus.OK);
     }
 
@@ -144,9 +141,9 @@ class FilmControllerTest {
         int filmId = response.getBody().getId();
         //adding like to a film
         HttpEntity<Film> entity = new HttpEntity<>(film1);
-        response = restTemplate.exchange("/films/" +filmId + "/like/" + user1.getId(), HttpMethod.PUT, entity, Film.class);
+        response = restTemplate.exchange("/films/" + filmId + "/like/" + user1.getId(), HttpMethod.PUT, entity, Film.class);
 
-        response = restTemplate.exchange("/films/" +filmId + "/like/" + user1.getId(), HttpMethod.DELETE, entity, Film.class);
+        response = restTemplate.exchange("/films/" + filmId + "/like/" + user1.getId(), HttpMethod.DELETE, entity, Film.class);
         assertEquals(response.getStatusCode(), HttpStatus.OK);
     }
 

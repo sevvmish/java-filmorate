@@ -6,11 +6,9 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.ObjectNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -60,7 +58,7 @@ public class FilmService {
         if (filmStorage.getAll().isEmpty()) return new ArrayList<>();
         if (count == 0 || count == null) count = 10;
 
-        return filmStorage.getAll().stream().filter(f -> f.getLikes().size()>0).sorted(Comparator.comparingInt(f -> f.getLikes().size()))
+        return filmStorage.getAll().stream().sorted(Comparator.comparingInt(f -> -f.getLikes().size()))
                 .limit(count).collect(Collectors.toList());
     }
 

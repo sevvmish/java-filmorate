@@ -9,7 +9,6 @@ import javax.validation.constraints.Past;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.TreeSet;
 
 @Data
 public class User {
@@ -27,5 +26,5 @@ public class User {
 
     @Past
     private LocalDate birthday;
-    private Set<User> friends = new HashSet<>();
+    private Set<Integer> friends = new HashSet<>();
 }
