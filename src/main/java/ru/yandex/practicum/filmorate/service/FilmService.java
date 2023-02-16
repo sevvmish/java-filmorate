@@ -26,6 +26,22 @@ public class FilmService {
         this.userStorage = userStorage;
     }
 
+    public List<Film> getAll() {
+        return filmStorage.getAll();
+    }
+
+    public Film add(Film film) {
+        return filmStorage.add(film);
+    }
+
+    public Film update(Film film) {
+        return filmStorage.update(film);
+    }
+
+    public Film getById(Integer id) {
+        return filmStorage.getById(id);
+    }
+
     public void addLike(Integer filmId, Integer userId) {
         if (filmId == null || userId == null) {
             log.warn("error in id data");

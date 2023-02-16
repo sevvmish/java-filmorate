@@ -16,6 +16,22 @@ import java.util.List;
 public class UserService {
     private final UserStorage userStorage;
 
+    public List<User> getAll() {
+        return userStorage.getAll();
+    }
+
+    public User add(User user) {
+        return userStorage.add(user);
+    }
+
+    public User update(User user) {
+        return userStorage.update(user);
+    }
+
+    public User getById(Integer id) {
+        return userStorage.getById(id);
+    }
+
     @Autowired
     public UserService(UserStorage userStorage) {
         this.userStorage = userStorage;
