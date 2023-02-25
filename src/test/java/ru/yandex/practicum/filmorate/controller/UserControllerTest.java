@@ -48,9 +48,11 @@ class UserControllerTest {
     }
 
     @Test
-    @DisplayName("Тест на добавление юзера и получения ИД")
-    void addUserTest() {
+    @DisplayName("Тест на получение юзера по ИД")
+    void getFilmTest() {
         response = getPostResponse(user1);
+        int id = response.getBody().getId();
+        response = restTemplate.getForEntity("/users/1", User.class);
         assertEquals(response.getStatusCode(), HttpStatus.OK);
         assertEquals(response.getBody().getId(), 1);
     }
@@ -68,7 +70,7 @@ class UserControllerTest {
 
         user2.setLogin("Bad name");
         response = getPostResponse(user2);
-        assertEquals(response.getStatusCode(), HttpStatus.INTERNAL_SERVER_ERROR);
+        assertEquals(response.getStatusCode(), HttpStatus.BAD_REQUEST);
     }
 
     @Test
@@ -100,7 +102,7 @@ class UserControllerTest {
     @DisplayName("Тест на ошибку при обновлении юзера, которого не было ранее по его ИД")
     void updateWrongUserErrorTest() {
         response = getPutResponse(user1);
-        assertEquals(response.getStatusCode(), HttpStatus.INTERNAL_SERVER_ERROR);
+        assertEquals(response.getStatusCode(), HttpStatus.NOT_FOUND);
     }
 
     @Test
@@ -111,6 +113,36 @@ class UserControllerTest {
         user2.setEmail("another-bad.email");
         response = getPutResponse(user2);
         assertEquals(response.getStatusCode(), HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    @DisplayName("Тест на добавление друга")
+    void addFriendTest() {
+        response = getPostResponse(user1);
+        int userId = response.getBody().getId();
+
+        response = getPostResponse(user2);
+        int friendId = response.getBody().getId();
+
+        HttpEntity<User> entity = new HttpEntity<>(user1);
+        response = restTemplate.exchange("/users/" + userId + "/friends/" + friendId, HttpMethod.PUT, entity, User.class);
+        assertEquals(response.getStatusCode(), HttpStatus.OK);
+    }
+
+    @Test
+    @DisplayName("Тест на удаление друга")
+    void removeFriendTest() {
+        response = getPostResponse(user1);
+        int userId = response.getBody().getId();
+
+        response = getPostResponse(user2);
+        int friendId = response.getBody().getId();
+
+        HttpEntity<User> entity = new HttpEntity<>(user1);
+        restTemplate.exchange("/users/" + userId + "/friends/" + friendId, HttpMethod.PUT, entity, User.class);
+
+        response = restTemplate.exchange("/users/" + userId + "/friends/" + friendId, HttpMethod.DELETE, entity, User.class);
+        assertEquals(response.getStatusCode(), HttpStatus.OK);
     }
 
     private ResponseEntity<User> getPostResponse(User user) {

@@ -13,6 +13,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
 
@@ -23,6 +24,7 @@ class FilmControllerTest {
     private ResponseEntity<Film> response;
     private Film film1;
     private Film film2;
+    private User user1;
 
     @BeforeEach
     public void beforeEach() {
@@ -37,6 +39,14 @@ class FilmControllerTest {
         film2.setDescription("description of holy cats");
         film2.setReleaseDate(LocalDate.of(2001, 11, 11));
         film2.setDuration(42);
+
+        user1 = new User();
+        user1.setEmail("ivanov@gmail.com");
+        user1.setLogin("ivanov");
+        user1.setName("Ivan");
+        user1.setBirthday(LocalDate.of(1988, 10, 11));
+        ResponseEntity<User> response = restTemplate.postForEntity("/users", user1, User.class);
+        user1.setId(response.getBody().getId());
     }
 
     @Test
@@ -48,9 +58,11 @@ class FilmControllerTest {
     }
 
     @Test
-    @DisplayName("Тест на добавление фильма и получения ИД")
-    void addFilmTest() {
+    @DisplayName("Тест на получение фильма по ИД")
+    void getFilmTest() {
         response = getPostResponse(film1);
+        int id = response.getBody().getId();
+        response = restTemplate.getForEntity("/films/1", Film.class);
         assertEquals(response.getStatusCode(), HttpStatus.OK);
         assertEquals(response.getBody().getId(), 1);
     }
@@ -81,7 +93,7 @@ class FilmControllerTest {
     void releaseDateErrorTest() {
         film1.setReleaseDate(LocalDate.of(1890, 10, 10));
         response = getPostResponse(film1);
-        assertEquals(response.getStatusCode(), HttpStatus.INTERNAL_SERVER_ERROR);
+        assertEquals(response.getStatusCode(), HttpStatus.BAD_REQUEST);
     }
 
     @Test
@@ -96,7 +108,7 @@ class FilmControllerTest {
     @DisplayName("Тест на ошибку при обновлении фильма, которого не было ранее по его ИД")
     void updateWrongFilmErrorTest() {
         response = getPutResponse(film1);
-        assertEquals(response.getStatusCode(), HttpStatus.INTERNAL_SERVER_ERROR);
+        assertEquals(response.getStatusCode(), HttpStatus.NOT_FOUND);
     }
 
     @Test
@@ -109,6 +121,32 @@ class FilmControllerTest {
         assertEquals(response.getStatusCode(), HttpStatus.BAD_REQUEST);
     }
 
+    @Test
+    @DisplayName("Тест на добавление лайка фильму")
+    void addLikeTest() {
+        //adding film
+        response = getPostResponse(film1);
+        int filmId = response.getBody().getId();
+        //adding like to a film
+        HttpEntity<Film> entity = new HttpEntity<>(film1);
+        response = restTemplate.exchange("/films/" + filmId + "/like/" + user1.getId(), HttpMethod.PUT, entity, Film.class);
+        assertEquals(response.getStatusCode(), HttpStatus.OK);
+    }
+
+    @Test
+    @DisplayName("Тест на удаление лайка")
+    void removeLikeTest() {
+        //adding film
+        response = getPostResponse(film1);
+        int filmId = response.getBody().getId();
+        //adding like to a film
+        HttpEntity<Film> entity = new HttpEntity<>(film1);
+        response = restTemplate.exchange("/films/" + filmId + "/like/" + user1.getId(), HttpMethod.PUT, entity, Film.class);
+
+        response = restTemplate.exchange("/films/" + filmId + "/like/" + user1.getId(), HttpMethod.DELETE, entity, Film.class);
+        assertEquals(response.getStatusCode(), HttpStatus.OK);
+    }
+
     private ResponseEntity<Film> getPostResponse(Film film) {
         return restTemplate.postForEntity("/films", film, Film.class);
     }
@@ -118,3 +156,11 @@ class FilmControllerTest {
         return restTemplate.exchange("/films", HttpMethod.PUT, entity, Film.class, film.getId());
     }
 }
+
+
+/*
+    HttpEntity<Film> entity1 = new HttpEntity<>(film1);
+    ResponseEntity<List<Film>> result = restTemplate.exchange("/films", HttpMethod.GET, entity1, new ParameterizedTypeReference<List<Film>>() {});
+        System.out.println(result.getBody().toString() + " !!!!!!!!!!!!");
+
+ */
