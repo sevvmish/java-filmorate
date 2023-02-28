@@ -1,7 +1,7 @@
 # java-filmorate
 **Схема базы данных:**
 
-![img.png](/BD cheme.png)
+![BD scheme](BDcheme.png)
 
 **Примеры запросов к БД:**
 
