@@ -59,6 +59,11 @@ public class InMemoryFilmStorage implements FilmStorage {
         }
     }
 
+    @Override
+    public List<Film> getMostPopular(Integer count) {
+        return null;
+    }
+
     private boolean isValidationChecked(Film film) {
         if (LocalDate.of(1895, 12, 28).isAfter(film.getReleaseDate())) {
             log.warn("release date is wrong");

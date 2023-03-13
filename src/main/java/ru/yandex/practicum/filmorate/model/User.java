@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.model;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
@@ -26,5 +27,7 @@ public class User {
 
     @Past
     private LocalDate birthday;
+
+    @EqualsAndHashCode.Exclude
     private Set<Integer> friends = new HashSet<>();
 }

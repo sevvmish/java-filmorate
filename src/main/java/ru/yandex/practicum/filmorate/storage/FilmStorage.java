@@ -12,4 +12,6 @@ public interface FilmStorage {
     Film update(Film film);
 
     Film getById(Integer id);
+
+    List<Film> getMostPopular(Integer count);
 }

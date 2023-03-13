@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,15 +17,10 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class FilmService {
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
-
-    @Autowired
-    public FilmService(FilmStorage filmStorage, UserStorage userStorage) {
-        this.filmStorage = filmStorage;
-        this.userStorage = userStorage;
-    }
 
     public List<Film> getAll() {
         return filmStorage.getAll();
@@ -43,16 +39,18 @@ public class FilmService {
     }
 
     public void addLike(Integer filmId, Integer userId) {
-        if (filmId == null || userId == null) {
+        if (filmId == null || userId == null || filmId < 0 || userId < 0) {
             log.warn("error in id data");
             throw new ValidationException("error in id data");
         }
+
         if (userStorage.getById(userId) == null) {
             log.warn("no such user with id {}", userId);
             throw new ObjectNotFoundException("user not found");
         }
         Film film = filmStorage.getById(filmId);
         film.getLikes().add(userId);
+        filmStorage.update(film);
         log.info("like added to a film {} by user {}", filmId, userId);
     }
 
@@ -67,6 +65,7 @@ public class FilmService {
         }
         Film film = filmStorage.getById(filmId);
         film.getLikes().remove(userId);
+        filmStorage.update(film);
         log.info("like removed from film {} by user {}", filmId, userId);
     }
 
@@ -74,8 +73,7 @@ public class FilmService {
         if (filmStorage.getAll().isEmpty()) return new ArrayList<>();
         if (count == 0 || count == null) count = 10;
 
-        return filmStorage.getAll().stream().sorted(Comparator.comparingInt(f -> -f.getLikes().size()))
-                .limit(count).collect(Collectors.toList());
+        return filmStorage.getMostPopular(count);
     }
 
 }

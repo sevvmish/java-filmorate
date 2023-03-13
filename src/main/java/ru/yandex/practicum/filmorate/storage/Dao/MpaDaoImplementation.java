@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.exception.ObjectNotFoundException;
 import ru.yandex.practicum.filmorate.model.Mpa;
 
 import java.util.List;
@@ -20,7 +21,7 @@ public class MpaDaoImplementation implements MpaDao{
         if (rs.next()) {
             return new Mpa(rs.getInt(1), rs.getString(2));
         }
-        return null;
+        throw new ObjectNotFoundException("wrong id: no such Mpa to return");
     }
 
     @Override

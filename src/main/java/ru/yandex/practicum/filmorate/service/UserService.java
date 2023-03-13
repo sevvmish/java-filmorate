@@ -1,11 +1,13 @@
 package ru.yandex.practicum.filmorate.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.ObjectNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.Dao.FriendsDao;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.util.ArrayList;
@@ -13,8 +15,10 @@ import java.util.List;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class UserService {
     private final UserStorage userStorage;
+    private final FriendsDao friendsDao;
 
     public List<User> getAll() {
         return userStorage.getAll();
@@ -32,10 +36,6 @@ public class UserService {
         return userStorage.getById(id);
     }
 
-    @Autowired
-    public UserService(UserStorage userStorage) {
-        this.userStorage = userStorage;
-    }
 
     public void addFriend(Integer id, Integer friendId) {
         if (id == null || friendId == null) {
@@ -48,7 +48,7 @@ public class UserService {
             throw new ObjectNotFoundException("user not found");
         }
         user.getFriends().add(friend.getId());
-        friend.getFriends().add(user.getId());
+        userStorage.update(user);
         log.info("user {} got new friend {} in friends", id, friendId);
     }
 
@@ -63,7 +63,7 @@ public class UserService {
             throw new ObjectNotFoundException("user not found");
         }
         user.getFriends().remove(friend.getId());
-        friend.getFriends().remove(user.getId());
+        userStorage.update(user);
         log.info("user {} removed friend {} from friends", id, friendId);
     }
 
@@ -80,7 +80,6 @@ public class UserService {
         for (Integer userId : user.getFriends()) {
             result.add(userStorage.getById(userId));
         }
-
         return result;
     }
 
@@ -94,13 +93,6 @@ public class UserService {
         if (user == null || otherUser == null) {
             throw new ObjectNotFoundException("user not found");
         }
-        List<User> result = new ArrayList<>();
-        for (Integer usersId : user.getFriends()) {
-            if (otherUser.getFriends().contains(usersId)) {
-                result.add(userStorage.getById(usersId));
-            }
-        }
-
-        return result;
+        return friendsDao.getCommon(id, otherId);
     }
 }

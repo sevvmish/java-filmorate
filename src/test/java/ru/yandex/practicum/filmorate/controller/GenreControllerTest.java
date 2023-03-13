@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import ru.yandex.practicum.filmorate.model.Genre;
@@ -48,5 +49,12 @@ public class GenreControllerTest {
         //6 - боевик
         response = restTemplate.getForEntity("/genres/6", Genre.class);
         assertEquals(response.getBody(), genreDao.getById(6));
+    }
+
+    @Test
+    @DisplayName("Тест на получение жанра по несуществующему ИД")
+    void getByWrongIdTest() {
+        response = restTemplate.getForEntity("/genres/12345", Genre.class);
+        assertEquals(response.getStatusCode(), HttpStatus.NOT_FOUND);
     }
 }

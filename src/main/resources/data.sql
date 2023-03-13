@@ -12,4 +12,3 @@ INSERT INTO PUBLIC.mpa_rating (name) VALUES ('PG');
 INSERT INTO PUBLIC.mpa_rating (name) VALUES ('PG-13');
 INSERT INTO PUBLIC.mpa_rating (name) VALUES ('R');
 INSERT INTO PUBLIC.mpa_rating (name) VALUES ('NC-17');
-

@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import ru.yandex.practicum.filmorate.model.Mpa;
@@ -48,5 +49,12 @@ public class MpaControllerTest {
         //4 - R
         response = restTemplate.getForEntity("/mpa/4", Mpa.class);
         assertEquals(response.getBody(), mpaDao.getById(4));
+    }
+
+    @Test
+    @DisplayName("Тест на получение рейтинга по несуществующему ИД")
+    void getByWrongIdTest() {
+        response = restTemplate.getForEntity("/mpa/12345", Mpa.class);
+        assertEquals(response.getStatusCode(), HttpStatus.NOT_FOUND);
     }
 }

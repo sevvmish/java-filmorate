@@ -81,7 +81,6 @@ CREATE TABLE IF NOT EXISTS friends
 (
     user_id   INT NOT NULL,
     friend_id INT NOT NULL,
-    is_friends INT NOT NULL,
     CONSTRAINT friends_pk PRIMARY KEY (user_id, friend_id),
     CONSTRAINT friends_fk_1 FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT friends_fk_2 FOREIGN KEY (friend_id) REFERENCES users (user_id) ON DELETE CASCADE ON UPDATE CASCADE
