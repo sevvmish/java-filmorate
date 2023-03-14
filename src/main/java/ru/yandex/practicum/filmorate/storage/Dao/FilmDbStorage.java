@@ -2,36 +2,30 @@ package ru.yandex.practicum.filmorate.storage.Dao;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.ObjectNotFoundException;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
-import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
 import java.sql.Date;
-import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Component
-@Primary
 @RequiredArgsConstructor
-public class FilmDbStorage implements FilmStorage {
+public class FilmDbStorage implements FilmDao {
     private final JdbcTemplate jdbcTemplate;
     private final FilmGenreDao filmGenreDao;
-    private final LikesDao likesDao;
 
     @Override
     public List<Film> getAll() {
         List<Film> films = new ArrayList<>();
-
+        Map<Integer, Film> filmsMap = new HashMap<>();
         try {
             SqlRowSet rs = jdbcTemplate.queryForRowSet(
                     "select FILMS.FILM_ID, FILMS.NAME, FILMS.DESCRIPTION, FILMS.RELEASE_DATE," +
@@ -49,24 +43,24 @@ public class FilmDbStorage implements FilmStorage {
                 film.setDuration(rs.getInt("duration"));
                 film.setMpa(new Mpa(rs.getInt("mpa_rating_id"),
                         rs.getString("MPAA_NAME")));
-                film.setGenres(getGenresByFilmId(film.getId()));
+
+                filmsMap.put(film.getId(), film);
                 films.add(film);
             }
         } catch (Exception ex) {
+            log.error("error getting all films");
             ex.printStackTrace();
-            System.out.println(ex);
         }
 
+        if (!filmsMap.isEmpty()) {
+            return getGenresByFilmId(filmsMap);
+        }
 
         return films;
     }
 
     @Override
     public Film add(Film film) {
-        if (!isValidationChecked(film)) {
-            throw new ValidationException("data validation error");
-        }
-
         SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(jdbcTemplate)
                 .withTableName("films")
                 .usingGeneratedKeyColumns("film_id");
@@ -74,29 +68,12 @@ public class FilmDbStorage implements FilmStorage {
         film.setId(simpleJdbcInsert.executeAndReturnKey(this.filmToMap(film)).intValue());
 
         filmGenreDao.updateGenreByFilm(film);
-        likesDao.updateLikes(film);
+
         return film;
-    }
-
-    private Map<String, Object> filmToMap(Film film) {
-        Map<String, Object> values = new HashMap<>();
-        values.put("name", film.getName());
-        values.put("description", film.getDescription());
-        values.put("release_date", film.getReleaseDate());
-        values.put("duration", film.getDuration());
-        if (film.getMpa() != null) {
-            values.put("mpa_rating_id", film.getMpa().getId());
-        }
-
-        return values;
     }
 
     @Override
     public Film update(Film film) {
-        if (!isValidationChecked(film) || film.getId() == null || film.getId() < 1) {
-            throw new ValidationException("validation exception");
-        }
-
         final String sql = "update films set name = ?, description = ?, release_date = ?, duration = ?, mpa_rating_id = ?   " +
                 "where film_id = ?";
         int count = jdbcTemplate.update(sql
@@ -110,7 +87,7 @@ public class FilmDbStorage implements FilmStorage {
         if (count == 1) {
 
             filmGenreDao.updateGenreByFilm(film);
-            likesDao.updateLikes(film);
+
             return film;
         } else {
             throw new ObjectNotFoundException("wrong id: no such film to update");
@@ -119,11 +96,6 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public Film getById(Integer id) {
-        String sql = "select count(*) from films where film_id=?";
-        if (jdbcTemplate.queryForObject(sql, Integer.class, id) == 0) {
-            throw new ObjectNotFoundException("No such film found");
-        }
-
         Film film = new Film();
 
         SqlRowSet rs = jdbcTemplate.queryForRowSet(
@@ -141,7 +113,7 @@ public class FilmDbStorage implements FilmStorage {
 
 
         if (rs.next()) {
-            Set<Genre> genres = new HashSet<>();
+            LinkedHashSet<Genre> genres = new LinkedHashSet<>();
             Set<Integer> likes = new HashSet<>();
 
             film.setId(rs.getInt("film_id"));
@@ -162,9 +134,9 @@ public class FilmDbStorage implements FilmStorage {
                     likes.add(i);
                 }
             } while (rs.next());
-            film.setGenres(genres.stream().collect(Collectors.toList()));
-            film.setLikes(likes);
-            return film;
+            film.setGenres(genres);
+        } else {
+            throw new ObjectNotFoundException("No such film found");
         }
 
         return film;
@@ -197,22 +169,46 @@ public class FilmDbStorage implements FilmStorage {
                 films.add(film);
             }
         } catch (Exception ex) {
+            log.error("error while trying getMostPopular list");
             ex.printStackTrace();
         }
 
         return films;
     }
 
-    private boolean isValidationChecked(Film film) {
-        if (LocalDate.of(1895, 12, 28).isAfter(film.getReleaseDate())) {
-            log.warn("release date is wrong");
-            return false;
+    private List<Film> getGenresByFilmId(Map<Integer, Film> filmsMap) {
+        List<Integer> filmIds = new ArrayList<>(filmsMap.keySet());
+
+        String inSql = String.join(",", Collections.nCopies(filmIds.size(), "?"));
+
+        try {
+            jdbcTemplate.query(
+                    String.format("SELECT FILM_GENRES.FILM_ID,FILM_GENRES.GENRE_ID, GENRES.NAME " +
+                            "FROM FILM_GENRES " +
+                            "JOIN GENRES ON  FILM_GENRES.GENRE_ID = GENRES.GENRE_ID " +
+                            "WHERE FILM_GENRES.FILM_ID IN (%s)", inSql),
+                    filmIds.toArray(),
+                    (rs, rowNum) -> filmsMap.get(rs.getInt("FILM_ID")).getGenres().
+                            add(new Genre(rs.getInt("GENRE_ID"), rs.getString("NAME"))));
+
+        } catch (Exception ex) {
+            log.error("error trying get genres for getall films");
+            ex.printStackTrace();
         }
-        return true;
+
+        return filmsMap.values().stream().collect(Collectors.toList());
     }
 
-    private List<Genre> getGenresByFilmId(Integer id) {
-        Film film = getById(id);
-        return film.getGenres();
+    private Map<String, Object> filmToMap(Film film) {
+        Map<String, Object> values = new HashMap<>();
+        values.put("name", film.getName());
+        values.put("description", film.getDescription());
+        values.put("release_date", film.getReleaseDate());
+        values.put("duration", film.getDuration());
+        if (film.getMpa() != null) {
+            values.put("mpa_rating_id", film.getMpa().getId());
+        }
+
+        return values;
     }
 }

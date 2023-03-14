@@ -21,7 +21,7 @@ public class MpaController {
 
     @GetMapping("{id}")
     public Mpa getMpaById(@PathVariable Integer id) {
-        if (id < 1 || id == null) {
+        if (id < 1) {
             log.warn("error in id while getting MPA by id");
             throw new ValidationException("error in id");
         }

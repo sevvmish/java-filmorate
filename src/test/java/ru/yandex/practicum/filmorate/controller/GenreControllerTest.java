@@ -10,7 +10,7 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.storage.Dao.GenreDao;
+import ru.yandex.practicum.filmorate.storage.Dao.GenreDaoImplementation;
 
 import java.util.Arrays;
 import java.util.List;
@@ -18,15 +18,14 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@RequiredArgsConstructor
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
 @AutoConfigureTestDatabase
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class GenreControllerTest {
     private ResponseEntity<Genre> response;
     @Autowired
     private TestRestTemplate restTemplate;
-    @Autowired
-    private GenreDao genreDao;
+    private final GenreDaoImplementation genreDao;
 
     @Test
     @DisplayName("Тест на получение полного списка жанров")

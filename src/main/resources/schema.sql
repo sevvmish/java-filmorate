@@ -42,8 +42,9 @@ CREATE TABLE IF NOT EXISTS users
     birthday DATE
 );
 
-CREATE UNIQUE INDEX IF NOT EXISTS users_user_id_uindex
-    ON users (user_id);
+CREATE UNIQUE INDEX IF NOT EXISTS users_user_id_uindex ON users (user_id);
+CREATE UNIQUE index if NOT EXISTS USER_EMAIL_UINDEX on users (email);
+CREATE UNIQUE index if NOT EXISTS USER_LOGIN_UINDEX on users (login);
 
 
 

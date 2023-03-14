@@ -16,7 +16,7 @@ public class GenreDaoImplementation implements GenreDao {
     private final JdbcTemplate jdbcTemplate;
 
     @Override
-    public Genre getById(int id) {
+    public Genre getById(Integer id) {
         SqlRowSet rs = jdbcTemplate.queryForRowSet("select * from genres where genre_id =  ?", id);
         if (rs.next()) {
             return new Genre(rs.getInt(1), rs.getString(2));

@@ -3,7 +3,6 @@ package ru.yandex.practicum.filmorate.storage.Dao;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
-import ru.yandex.practicum.filmorate.model.Film;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -18,47 +17,35 @@ public class LikesDaoImplementation implements LikesDao {
     private final JdbcTemplate jdbcTemplate;
 
     @Override
-    public Set<Integer> getLikes(Film film) {
+    public Set<Integer> getLikes(Integer id) {
         final String sql = "select * from likes where film_id = ?";
         List<Integer> likes = jdbcTemplate.query(sql, (rs, rowNum) ->
-                rs.getInt("user_id"), film.getId());
+                rs.getInt("user_id"), id);
         return likes.stream().collect(Collectors.toSet());
     }
 
     @Override
-    public void insertLikes(Film film) {
-        if (film.getLikes().isEmpty()) {
-            return;
-        }
+    public void insertLikes(Integer filmId, Integer userId) {
 
         String sql = "insert into likes(user_id, film_id) values (?, ?)";
 
         try (Connection connection = jdbcTemplate.getDataSource().getConnection();
              PreparedStatement ps = connection.prepareStatement(sql)) {
-            for (Integer like : film.getLikes()) {
-                ps.setLong(1, like);
-                ps.setLong(2, film.getId());
-                ps.addBatch();
-            }
+
+            ps.setInt(1, userId);
+            ps.setInt(2, filmId);
+            ps.addBatch();
+
             ps.executeBatch();
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
-    @Override
-    public void updateLikes(Film film) {
-        if (film.getLikes().isEmpty()) {
-            deleteLikes(film);
-            return;
-        }
-        deleteLikes(film);
-        insertLikes(film);
-    }
 
     @Override
-    public void deleteLikes(Film film) {
-        String sql = "delete from likes where film_id = ?";
-        jdbcTemplate.update(sql, film.getId());
+    public void deleteLikes(Integer filmId, Integer userId) {
+        String sql = "delete from likes where film_id = ? and user_id = ?";
+        jdbcTemplate.update(sql, filmId, userId);
     }
 }

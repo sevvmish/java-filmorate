@@ -21,7 +21,7 @@ public class GenreController {
 
     @GetMapping("{id}")
     public Genre getGenreById(@PathVariable Integer id) {
-        if (id < 1 || id == null) {
+        if (id < 1) {
             log.warn("error in id while getting Genre by id");
             throw new ValidationException("error in id");
         }

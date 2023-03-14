@@ -1,15 +1,19 @@
 package ru.yandex.practicum.filmorate.storage.Dao;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor
@@ -43,11 +47,21 @@ public class FilmGenreDaoImplementation implements FilmGenreDao {
         }
 
         deleteAllInDb(film);
-        film.setGenres(film.getGenres().stream().distinct().collect(Collectors.toList()));
+        List<Genre> genres = new ArrayList<>(film.getGenres());
 
-        for (Genre genreToAdd : film.getGenres()) {
-            addGenreToFilm(film.getId(), genreToAdd);
-        }
+        jdbcTemplate.batchUpdate("insert into film_genres(film_id, genre_id) values  (?, ?)",
+                new BatchPreparedStatementSetter() {
+                    @Override
+                    public void setValues(PreparedStatement preparedStatement, int i) throws SQLException {
+                        preparedStatement.setInt(1, film.getId());
+                        preparedStatement.setInt(2, genres.get(i).getId());
+                    }
+
+                    @Override
+                    public int getBatchSize() {
+                        return film.getGenres().size();
+                    }
+                });
     }
 
     private void deleteAllInDb(Film film) {
