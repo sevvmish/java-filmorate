@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor
-public class LikesDaoImplementation implements LikesDao{
+public class LikesDaoImplementation implements LikesDao {
     private final JdbcTemplate jdbcTemplate;
 
     @Override

@@ -7,7 +7,10 @@ import java.util.Set;
 
 public interface FriendsDao {
     Set<Integer> getFriends(Integer id);
+
     void insertFriends(User user);
+
     void deleteFriends(User user);
+
     List<User> getCommon(Integer id, Integer otherId);
 }

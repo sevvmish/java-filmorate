@@ -32,7 +32,7 @@ public class FilmDbStorage implements FilmStorage {
     public List<Film> getAll() {
         List<Film> films = new ArrayList<>();
 
-        try{
+        try {
             SqlRowSet rs = jdbcTemplate.queryForRowSet(
                     "select FILMS.FILM_ID, FILMS.NAME, FILMS.DESCRIPTION, FILMS.RELEASE_DATE," +
                             " FILMS.DURATION, FILMS.mpa_rating_id, mpa_rating.NAME as MPAA_NAME from films " +
@@ -52,10 +52,10 @@ public class FilmDbStorage implements FilmStorage {
                 film.setGenres(getGenresByFilmId(film.getId()));
                 films.add(film);
             }
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                System.out.println(ex);
-            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            System.out.println(ex);
+        }
 
 
         return films;
@@ -112,8 +112,7 @@ public class FilmDbStorage implements FilmStorage {
             filmGenreDao.updateGenreByFilm(film);
             likesDao.updateLikes(film);
             return film;
-        }
-        else {
+        } else {
             throw new ObjectNotFoundException("wrong id: no such film to update");
         }
     }
@@ -175,11 +174,11 @@ public class FilmDbStorage implements FilmStorage {
     public List<Film> getMostPopular(Integer count) {
         List<Film> films = new ArrayList<>();
 
-        try{
+        try {
             SqlRowSet rs = jdbcTemplate.queryForRowSet(
                     "select films.film_id as film_id, films.name , films.description, films.release_date, films.duration, " +
                             "films.mpa_rating_id, mpa_rating.name as MPA, COUNT(likes.film_id) as all_likes " +
-                            "from films "+
+                            "from films " +
                             "left join likes on films.film_id = likes.film_id " +
                             "join mpa_rating on films.mpa_rating_id = mpa_rating.mpa_rating_id " +
                             "GROUP BY films.film_id " +
@@ -201,8 +200,6 @@ public class FilmDbStorage implements FilmStorage {
             ex.printStackTrace();
         }
 
-
-
         return films;
     }
 
@@ -218,19 +215,4 @@ public class FilmDbStorage implements FilmStorage {
         Film film = getById(id);
         return film.getGenres();
     }
-
-    /*
-    select films.film_id as film_id, films.name , films.description, films.release_date, films.duration,
-    films.mpa_rating_id, mpa_rating.name as MPA
-    from films
-    left join likes on films.film_id = likes.film_id
-    join mpa_rating on films.mpa_rating_id = mpa_rating.mpa_rating_id
-    GROUP BY films.film_id
-    ORDER BY COUNT(likes.film_id)  DESC
-    LIMIT 10
-
-     */
-
-
-
 }

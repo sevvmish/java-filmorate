@@ -5,7 +5,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.exception.ObjectNotFoundException;
-import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.sql.Connection;
@@ -15,7 +14,7 @@ import java.util.*;
 
 @Repository
 @RequiredArgsConstructor
-public class FriendsDaoImplementation implements FriendsDao{
+public class FriendsDaoImplementation implements FriendsDao {
     private final JdbcTemplate jdbcTemplate;
 
     @Override

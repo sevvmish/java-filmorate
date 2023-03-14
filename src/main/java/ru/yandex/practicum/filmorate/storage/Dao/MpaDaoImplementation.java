@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor
-public class MpaDaoImplementation implements MpaDao{
+public class MpaDaoImplementation implements MpaDao {
     private final JdbcTemplate jdbcTemplate;
 
     @Override

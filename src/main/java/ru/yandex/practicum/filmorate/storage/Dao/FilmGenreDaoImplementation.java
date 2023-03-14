@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor
-public class FilmGenreDaoImplementation implements FilmGenreDao{
+public class FilmGenreDaoImplementation implements FilmGenreDao {
     private final JdbcTemplate jdbcTemplate;
 
     @Override

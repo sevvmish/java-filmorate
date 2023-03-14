@@ -6,5 +6,6 @@ import java.util.List;
 
 public interface GenreDao {
     Genre getById(int id);
+
     List<Genre> getAll();
 }

@@ -9,7 +9,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.core.JdbcTemplate;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.storage.Dao.GenreDao;
 
@@ -26,8 +25,6 @@ public class GenreControllerTest {
     private ResponseEntity<Genre> response;
     @Autowired
     private TestRestTemplate restTemplate;
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
     @Autowired
     private GenreDao genreDao;
 

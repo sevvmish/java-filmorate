@@ -79,8 +79,7 @@ public class UserDbStorage implements UserStorage {
             friendsDao.deleteFriends(user);
             friendsDao.insertFriends(user);
             return user;
-        }
-        else {
+        } else {
             throw new ObjectNotFoundException("wrong id: no such user to update");
         }
     }
