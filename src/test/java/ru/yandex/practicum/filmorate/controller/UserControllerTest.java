@@ -14,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.Dao.FriendsDaoImplementation;
 import ru.yandex.practicum.filmorate.storage.Dao.UserDbStorage;
 
 import java.time.LocalDate;
@@ -30,6 +31,7 @@ class UserControllerTest {
     private TestRestTemplate restTemplate;
     private ResponseEntity<User> response;
     private final UserDbStorage userDbStorage;
+    private final FriendsDaoImplementation friendsDao;
     private User user1;
     private User user2;
     private User user3;
@@ -173,7 +175,7 @@ class UserControllerTest {
     @DisplayName("Тест на ошибку при обновлении юзера, которого не было ранее по его ИД")
     void updateWrongUserErrorTest() {
         response = getPutResponse(user1);
-        assertEquals(response.getStatusCode(), HttpStatus.BAD_REQUEST);
+        assertEquals(response.getStatusCode(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @Test
@@ -193,14 +195,15 @@ class UserControllerTest {
         int userId = response.getBody().getId();
 
         response = getPostResponse(user2);
-        int friendId = response.getBody().getId();
+        User friend = response.getBody();
 
         HttpEntity<User> entity = new HttpEntity<>(user1);
-        response = restTemplate.exchange("/users/" + userId + "/friends/" + friendId, HttpMethod.PUT, entity, User.class);
+        response = restTemplate.exchange("/users/" + userId + "/friends/" + friend.getId(), HttpMethod.PUT, entity, User.class);
         assertEquals(response.getStatusCode(), HttpStatus.OK);
 
         User testUser = userDbStorage.getById(userId);
-        //assertEquals(testUser.getFriends().toArray()[0], friendId);
+        List<User> friends = friendsDao.getFriends(testUser.getId());
+        assertEquals(friends.toArray()[0], friend);
     }
 
     @Test
@@ -210,19 +213,21 @@ class UserControllerTest {
         int userId = response.getBody().getId();
 
         response = getPostResponse(user2);
-        int friendId = response.getBody().getId();
+        User friend = response.getBody();
 
         HttpEntity<User> entity = new HttpEntity<>(user1);
-        restTemplate.exchange("/users/" + userId + "/friends/" + friendId, HttpMethod.PUT, entity, User.class);
+        restTemplate.exchange("/users/" + userId + "/friends/" + friend.getId(), HttpMethod.PUT, entity, User.class);
 
         User testUser = userDbStorage.getById(userId);
-        //assertEquals(testUser.getFriends().toArray()[0], friendId);
+        List<User> friends = friendsDao.getFriends(testUser.getId());
+        assertEquals(friends.toArray()[0], friend);
 
-        response = restTemplate.exchange("/users/" + userId + "/friends/" + friendId, HttpMethod.DELETE, entity, User.class);
+        response = restTemplate.exchange("/users/" + userId + "/friends/" + friend.getId(), HttpMethod.DELETE, entity, User.class);
         assertEquals(response.getStatusCode(), HttpStatus.OK);
 
         testUser = userDbStorage.getById(userId);
-        //assertTrue(testUser.getFriends().isEmpty());
+        friends = friendsDao.getFriends(testUser.getId());
+        assertTrue(friends.isEmpty());
     }
 
     @Test

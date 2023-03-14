@@ -44,7 +44,7 @@ public class FilmService {
             throw new ValidationException("error in id data");
         }
 
-        likesDao.insertLikes(filmId, userId);
+        likesDao.addLike(filmId, userId);
         log.info("like added to a film {} by user {}", filmId, userId);
     }
 
@@ -53,7 +53,7 @@ public class FilmService {
             log.warn("no such film or user");
             throw new ObjectNotFoundException("no such film or user");
         }
-        likesDao.deleteLikes(filmId, userId);
+        likesDao.deleteLike(filmId, userId);
         log.info("like removed from film {} by user {}", filmId, userId);
     }
 

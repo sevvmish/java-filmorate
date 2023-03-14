@@ -43,7 +43,7 @@ public class UserService {
         if (user == null || friend == null) {
             throw new ObjectNotFoundException("user not found");
         }
-        friendsDao.insertFriends(id, friendId);
+        friendsDao.addFriend(id, friendId);
         log.info("user {} got new friend {} in friends", id, friendId);
     }
 

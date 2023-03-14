@@ -20,9 +20,11 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.Dao.FilmDbStorage;
+import ru.yandex.practicum.filmorate.storage.Dao.LikesDaoImplementation;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -33,6 +35,7 @@ class FilmControllerTest {
     @Autowired
     private TestRestTemplate restTemplate;
     private final FilmDbStorage filmDbStorage;
+    private final LikesDaoImplementation likesDao;
     private ResponseEntity<Film> response;
     private Film film1;
     private Film film2;
@@ -180,7 +183,7 @@ class FilmControllerTest {
     @DisplayName("Тест на ошибку при обновлении фильма, которого не было ранее по его ИД")
     void updateWrongFilmErrorTest() {
         response = getPutResponse(film1);
-        assertEquals(response.getStatusCode(), HttpStatus.BAD_REQUEST);
+        assertEquals(response.getStatusCode(), HttpStatus.NOT_FOUND);
     }
 
     @Test
@@ -205,7 +208,8 @@ class FilmControllerTest {
         assertEquals(response.getStatusCode(), HttpStatus.OK);
 
         Film film = filmDbStorage.getById(filmId);
-        //assertEquals(film.getLikes().toArray()[0], user1.getId());
+        Set<Integer> usersInLikes = likesDao.getLikes(film.getId());
+        assertEquals(usersInLikes.toArray()[0], user1.getId());
     }
 
     @Test
@@ -219,21 +223,26 @@ class FilmControllerTest {
         response = restTemplate.exchange("/films/" + filmId + "/like/" + user1.getId(), HttpMethod.PUT, entity, Film.class);
 
         Film film = filmDbStorage.getById(filmId);
-        //assertEquals(film.getLikes().toArray()[0], user1.getId());
+        Set<Integer> usersInLikes = likesDao.getLikes(film.getId());
+        assertEquals(usersInLikes.toArray()[0], user1.getId());
 
         response = restTemplate.exchange("/films/" + filmId + "/like/" + user1.getId(), HttpMethod.DELETE, entity, Film.class);
         assertEquals(response.getStatusCode(), HttpStatus.OK);
 
         film = filmDbStorage.getById(filmId);
-        //assertTrue(film.getLikes().isEmpty());
+        usersInLikes = likesDao.getLikes(film.getId());
+        assertTrue(usersInLikes.isEmpty());
     }
 
     @Test
     @DisplayName("Тест на получение популярных фильмов")
     void getPopularFilmsTest() {
-        //film2.getLikes().add(1);
         Film film1WithId = getPostResponse(film1).getBody();
         Film film2WithId = getPostResponse(film2).getBody();
+
+        HttpEntity<Film> entity = new HttpEntity<>(film2WithId);
+        response = restTemplate.exchange("/films/" + film2WithId.getId() + "/like/" + user1.getId(), HttpMethod.PUT, entity, Film.class);
+
         Film[] rightFilmOrder = new Film[]{film2WithId, film1WithId};
 
         ResponseEntity<Film[]> responseList = restTemplate.getForEntity("/films/popular", Film[].class);

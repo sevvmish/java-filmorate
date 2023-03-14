@@ -36,7 +36,7 @@ public class FriendsDaoImplementation implements FriendsDao {
     }
 
     @Override
-    public void insertFriends(Integer id, Integer friendId) {
+    public void addFriend(Integer id, Integer friendId) {
 
         String sql = "insert into friends (user_id, friend_id) values (?, ?)";
 

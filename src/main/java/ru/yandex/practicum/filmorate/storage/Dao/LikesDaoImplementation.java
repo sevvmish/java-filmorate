@@ -25,7 +25,7 @@ public class LikesDaoImplementation implements LikesDao {
     }
 
     @Override
-    public void insertLikes(Integer filmId, Integer userId) {
+    public void addLike(Integer filmId, Integer userId) {
 
         String sql = "insert into likes(user_id, film_id) values (?, ?)";
 
@@ -44,7 +44,7 @@ public class LikesDaoImplementation implements LikesDao {
 
 
     @Override
-    public void deleteLikes(Integer filmId, Integer userId) {
+    public void deleteLike(Integer filmId, Integer userId) {
         String sql = "delete from likes where film_id = ? and user_id = ?";
         jdbcTemplate.update(sql, filmId, userId);
     }

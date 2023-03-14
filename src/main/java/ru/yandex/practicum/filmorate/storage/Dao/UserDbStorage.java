@@ -53,7 +53,7 @@ public class UserDbStorage implements UserDao {
     @Override
     public User update(User user) {
         if (user.getId() < 1) {
-            throw new ValidationException("data validation error");
+            throw new ObjectNotFoundException("wrong id: no such user to update");
         }
 
         final String sql = "update users set email = ?, login = ?, name = ?, birthday = ?   where user_id = ?";
