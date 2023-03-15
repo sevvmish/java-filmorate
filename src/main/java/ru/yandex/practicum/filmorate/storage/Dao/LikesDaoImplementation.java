@@ -1,16 +1,15 @@
 package ru.yandex.practicum.filmorate.storage.Dao;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Repository
 @RequiredArgsConstructor
 public class LikesDaoImplementation implements LikesDao {
@@ -26,20 +25,8 @@ public class LikesDaoImplementation implements LikesDao {
 
     @Override
     public void addLike(Integer filmId, Integer userId) {
-
         String sql = "insert into likes(user_id, film_id) values (?, ?)";
-
-        try (Connection connection = jdbcTemplate.getDataSource().getConnection();
-             PreparedStatement ps = connection.prepareStatement(sql)) {
-
-            ps.setInt(1, userId);
-            ps.setInt(2, filmId);
-            ps.addBatch();
-
-            ps.executeBatch();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        jdbcTemplate.update(sql, userId, filmId);
     }
 
 

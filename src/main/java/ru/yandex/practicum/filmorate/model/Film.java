@@ -26,6 +26,7 @@ public class Film {
     @Positive
     private Integer duration;
 
+    @NotNull
     @Valid
     private Mpa mpa;
 

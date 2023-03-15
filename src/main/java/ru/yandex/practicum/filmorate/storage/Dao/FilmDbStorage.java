@@ -20,7 +20,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class FilmDbStorage implements FilmDao {
     private final JdbcTemplate jdbcTemplate;
-    private final FilmGenreDao filmGenreDao;
 
     @Override
     public List<Film> getAll() {
@@ -29,21 +28,12 @@ public class FilmDbStorage implements FilmDao {
         try {
             SqlRowSet rs = jdbcTemplate.queryForRowSet(
                     "select FILMS.FILM_ID, FILMS.NAME, FILMS.DESCRIPTION, FILMS.RELEASE_DATE," +
-                            " FILMS.DURATION, FILMS.mpa_rating_id, mpa_rating.NAME as MPAA_NAME from films " +
+                            " FILMS.DURATION, FILMS.mpa_rating_id, mpa_rating.NAME as MPA from films " +
                             "join mpa_rating on FILMS.mpa_rating_id = mpa_rating.mpa_rating_id " +
                             "order by FILM_ID"
             );
             while (rs.next()) {
-
-                Film film = new Film();
-                film.setId(rs.getInt("film_id"));
-                film.setName(rs.getString("name"));
-                film.setDescription(rs.getString("description"));
-                film.setReleaseDate(rs.getDate("release_date").toLocalDate());
-                film.setDuration(rs.getInt("duration"));
-                film.setMpa(new Mpa(rs.getInt("mpa_rating_id"),
-                        rs.getString("MPAA_NAME")));
-
+                Film film = convertSqlRowSetToFilm(rs);
                 filmsMap.put(film.getId(), film);
                 films.add(film);
             }
@@ -67,8 +57,6 @@ public class FilmDbStorage implements FilmDao {
 
         film.setId(simpleJdbcInsert.executeAndReturnKey(this.filmToMap(film)).intValue());
 
-        filmGenreDao.updateGenreByFilm(film);
-
         return film;
     }
 
@@ -86,8 +74,6 @@ public class FilmDbStorage implements FilmDao {
 
         if (count == 1) {
 
-            filmGenreDao.updateGenreByFilm(film);
-
             return film;
         } else {
             throw new ObjectNotFoundException("wrong id: no such film to update");
@@ -102,11 +88,10 @@ public class FilmDbStorage implements FilmDao {
                 "select films.film_id as film_id, " +
                         "films.name , films.description, films.release_date, films.duration, films.mpa_rating_id, " +
                         "mpa_rating.name as MPA, film_genres.genre_id, " +
-                        "genres.name as GN, " +
-                        "likes.user_id from films " +
+                        "genres.name as GN " +
+                        "from films " +
                         "left join film_genres on films.film_id = film_genres.film_id " +
                         "left join genres on film_genres.genre_id = genres.genre_id " +
-                        "left join likes on films.film_id = likes.film_id " +
                         "left join mpa_rating on films.mpa_rating_id = mpa_rating.mpa_rating_id " +
                         "where films.film_id = ?",
                 id);
@@ -114,24 +99,10 @@ public class FilmDbStorage implements FilmDao {
 
         if (rs.next()) {
             LinkedHashSet<Genre> genres = new LinkedHashSet<>();
-            Set<Integer> likes = new HashSet<>();
-
-            film.setId(rs.getInt("film_id"));
-            film.setName(rs.getString("name"));
-            film.setDescription(rs.getString("description"));
-            film.setReleaseDate(rs.getDate("release_date").toLocalDate());
-            film.setDuration(rs.getInt("duration"));
-            film.setMpa(new Mpa(rs.getInt("mpa_rating_id"),
-                    rs.getString("MPA")));
-
+            film = convertSqlRowSetToFilm(rs);
             do {
                 if (rs.getString("GN") != null) {
                     genres.add(new Genre(rs.getInt("genre_id"), rs.getString("GN")));
-                }
-
-                int i = rs.getInt("user_id");
-                if (i != 0 && !likes.contains(i)) {
-                    likes.add(i);
                 }
             } while (rs.next());
             film.setGenres(genres);
@@ -158,15 +129,7 @@ public class FilmDbStorage implements FilmDao {
                             "LIMIT ?", count);
 
             while (rs.next()) {
-
-                Film film = new Film();
-                film.setId(rs.getInt("film_id"));
-                film.setName(rs.getString("name"));
-                film.setDescription(rs.getString("description"));
-                film.setReleaseDate(rs.getDate("release_date").toLocalDate());
-                film.setDuration(rs.getInt("duration"));
-                film.setMpa(new Mpa(rs.getInt("mpa_rating_id"), rs.getString("MPA")));
-                films.add(film);
+                films.add(convertSqlRowSetToFilm(rs));
             }
         } catch (Exception ex) {
             log.error("error while trying getMostPopular list");
@@ -210,5 +173,17 @@ public class FilmDbStorage implements FilmDao {
         }
 
         return values;
+    }
+
+    private Film convertSqlRowSetToFilm(SqlRowSet rs) {
+        Film film = new Film();
+        film.setId(rs.getInt("film_id"));
+        film.setName(rs.getString("name"));
+        film.setDescription(rs.getString("description"));
+        film.setReleaseDate(rs.getDate("release_date").toLocalDate());
+        film.setDuration(rs.getInt("duration"));
+        film.setMpa(new Mpa(rs.getInt("mpa_rating_id"), rs.getString("MPA")));
+
+        return film;
     }
 }

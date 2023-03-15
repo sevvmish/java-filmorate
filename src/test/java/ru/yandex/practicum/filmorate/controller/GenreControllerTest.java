@@ -10,6 +10,7 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.storage.Dao.GenreDao;
 import ru.yandex.practicum.filmorate.storage.Dao.GenreDaoImplementation;
 
 import java.util.Arrays;
@@ -25,7 +26,7 @@ public class GenreControllerTest {
     private ResponseEntity<Genre> response;
     @Autowired
     private TestRestTemplate restTemplate;
-    private final GenreDaoImplementation genreDao;
+    private final GenreDao genreDao;
 
     @Test
     @DisplayName("Тест на получение полного списка жанров")

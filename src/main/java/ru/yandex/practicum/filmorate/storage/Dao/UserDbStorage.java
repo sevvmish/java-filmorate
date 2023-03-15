@@ -8,7 +8,6 @@ import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.ObjectNotFoundException;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.*;
@@ -28,13 +27,7 @@ public class UserDbStorage implements UserDao {
 
         SqlRowSet rs = jdbcTemplate.queryForRowSet(sql);
         while (rs.next()) {
-            User user = new User();
-            user.setId(rs.getInt("user_id"));
-            user.setEmail(rs.getString("email"));
-            user.setLogin(rs.getString("login"));
-            user.setName(rs.getString("name"));
-            user.setBirthday(rs.getDate("birthday").toLocalDate());
-            users.add(user);
+            users.add(convertSqlRowSetToUser(rs));
         }
         return users;
     }
@@ -72,11 +65,7 @@ public class UserDbStorage implements UserDao {
         String sql = "select * from users where user_id = ?";
         SqlRowSet rs = jdbcTemplate.queryForRowSet(sql, id);
         if (rs.next()) {
-            user.setId(rs.getInt("USER_ID"));
-            user.setEmail(rs.getString("EMAIL"));
-            user.setLogin(rs.getString("LOGIN"));
-            user.setName(rs.getString("NAME"));
-            user.setBirthday(rs.getDate("BIRTHDAY").toLocalDate());
+            user = convertSqlRowSetToUser(rs);
         } else {
             throw new ObjectNotFoundException("No such user found");
         }
@@ -92,6 +81,17 @@ public class UserDbStorage implements UserDao {
         values.put("birthday", user.getBirthday());
 
         return values;
+    }
+
+    private User convertSqlRowSetToUser(SqlRowSet rs) {
+        User user = new User();
+        user.setId(rs.getInt("user_id"));
+        user.setEmail(rs.getString("email"));
+        user.setLogin(rs.getString("login"));
+        user.setName(rs.getString("name"));
+        user.setBirthday(rs.getDate("birthday").toLocalDate());
+
+        return user;
     }
 
 }

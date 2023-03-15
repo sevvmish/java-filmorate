@@ -7,6 +7,7 @@ import ru.yandex.practicum.filmorate.exception.ObjectNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.Dao.FilmDao;
+import ru.yandex.practicum.filmorate.storage.Dao.FilmGenreDao;
 import ru.yandex.practicum.filmorate.storage.Dao.LikesDao;
 
 import java.time.LocalDate;
@@ -17,6 +18,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class FilmService {
     private final FilmDao filmStorage;
+    private final FilmGenreDao filmGenre;
     private final LikesDao likesDao;
     private static final LocalDate EXTREME_RELEASE_DATE = LocalDate.of(1895, 12, 28);
 
@@ -26,12 +28,16 @@ public class FilmService {
 
     public Film add(Film film) {
         checkValidation(film);
-        return filmStorage.add(film);
+        film = filmStorage.add(film);
+        filmGenre.updateGenreByFilm(film);
+        return film;
     }
 
     public Film update(Film film) {
         checkValidation(film);
-        return filmStorage.update(film);
+        film = filmStorage.update(film);
+        filmGenre.updateGenreByFilm(film);
+        return film;
     }
 
     public Film getById(Integer id) {
