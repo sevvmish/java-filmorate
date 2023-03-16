@@ -18,9 +18,9 @@
 * SELECT *
 * FROM users
 * WHERE user_id
-* IN (SELECT friend_id FROM friends WHERE user_id='id' AND is_friends=1)
+* IN (SELECT friend_id FROM friends WHERE user_id='id')
 * AND user_id
-* IN (SELECT friend_id FROM friends WHERE user_id='otherId' AND is_friends=1)
+* IN (SELECT friend_id FROM friends WHERE user_id='otherId')
 
 *получение всех фильмов:* 
 * SELECT * 
